@@ -6,16 +6,23 @@ use std::env;
 use std::path::Path;
 
 fn  change_directory(path: &str){
-    let current_path = Path::new(path);
-    env::set_current_dir(&current_path);
+    let destiny_path = Path::new(path);
+    let _result = env::set_current_dir(&destiny_path);
     
 }
 
-fn list_items(){
-    let paths = fs::read_dir("/home/phonnz/").unwrap();
+fn clean_path(path: &mut String) -> String {
+    path.replace("/", "")
+}
 
+fn list_items(){
+    let current_path = get_current_path().replace("\n", "");
+    let paths = fs::read_dir(Path::new(&current_path)).unwrap();
+    //paths = paths.iter().map(|p| clean_path);
     for path in paths {
-            println!("{:?}", path);
+        // let l = (path.unwrap().path().display()).into_os_string().into_string();
+        // println!("{:?}", l);
+        println!("{:?}", path.unwrap().path().display());
     }
 }
 
@@ -30,19 +37,30 @@ fn make_queue(command: &String) -> Vec<&str>{
     commands.collect::<Vec<&str>>()
 }
 
+fn get_current_path() -> String {
+    let path = Command::new("pwd").output().unwrap();
+    String::from_utf8_lossy(&path.stdout).to_string()
+
+}
+
 fn get_prompt() -> String {
-    let mut cmd_to_exec = Command::new("pwd").output().unwrap();
     let mut output = String::from("phonnz@intruso:");
-    output.push_str(&String::from_utf8_lossy(&cmd_to_exec.stdout).to_string());
+    output.push_str(&get_current_path());
     output
 }
 
-fn run_cmd(command: &String){
+fn exec_cmd(commands: Vec<&str>){
+    for cmd in commands.iter() {
+        run_single_cmd(&cmd.to_string());
+    }
+}
+
+fn run_single_cmd(command: &String){
     let mut args = parse_cmd(command);
     match args[0] {
-        // "ls" => {
-        //     list_items();
-        // },
+        "cls" => {
+            list_items();
+        },
         "exit" => println!("Close the shell with `exit()`\n"),
         "exit()" => {
                 println!("Ciao!");
@@ -60,11 +78,15 @@ fn run_cmd(command: &String){
             if args.len() > 1 {
                 args.reverse();
                 args.pop();
+                args.reverse();
                 for a in args{
                     cmd_to_exec.arg(a);
                 }
             }
-            cmd_to_exec.status().expect("failed to execute process");
+            let result = cmd_to_exec.status().expect("failed to execute process");
+            println!("{:?}", result);
+            // let result = cmd_to_exec.spawn().expect("failed to execute process");
+            // println!("{:?}", result);
             // list_dir.current_dir("/");
             // list_dir.status().expect("failed to execute process");
             
@@ -76,6 +98,11 @@ fn run_cmd(command: &String){
     
 }
 
+fn create_sequence(cmd: &str) -> Vec<&str>{
+    let sequence = cmd.trim().split("|");
+    sequence.collect::<Vec<&str>>()
+
+}
 
 
 fn main() {
@@ -88,9 +115,11 @@ fn main() {
             print!("{}", get_prompt());
         }else{
             let queue = make_queue(&line);
-                for cmd in queue.iter(){
-                    run_cmd(&cmd.to_string());
-                }
+            let commands_queue: Vec<_> = queue.iter().map(|q| create_sequence(q)).collect();
+            //println!("{:?}", commands_queue);
+            for cmd in commands_queue.iter(){
+                exec_cmd(cmd.to_vec());
+            }
 
         }
         
