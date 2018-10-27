@@ -25,8 +25,14 @@ fn parse_cmd(cmd: &String) -> Vec<&str> {
     
 }
 
-fn run_cmd(cmd: &String){
-    let mut args = parse_cmd(cmd);
+fn make_queue(command: &String) -> Vec<&str>{
+    let commands = command.trim().split(";");
+    commands.collect::<Vec<&str>>()
+}
+
+fn run_cmd(command: &String){
+
+    let mut args = parse_cmd(command);
     match args[0] {
         // "ls" => {
         //     list_items();
@@ -63,13 +69,11 @@ fn run_cmd(cmd: &String){
 fn main() {
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
-        run_cmd(&line.unwrap());
-        // if "" == line.unwrap().clone() {
-        //    println!(""); 
-        // }else{
-        //     run_cmd(&line.unwrap());
-
-        // }
+        let line = line.unwrap();
+        let queue = make_queue(&line);
+        for cmd in queue.iter(){
+            run_cmd(&cmd.to_string());
+        }
         
     }
 }
