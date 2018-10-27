@@ -43,6 +43,7 @@ fn run_cmd(command: &String){
         // "ls" => {
         //     list_items();
         // },
+        "exit"=> println!("Close the shell with exit()"),
         "cd" => {
             if args.len() > 1 {
                 change_directory(args[1]);
