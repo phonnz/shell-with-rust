@@ -43,7 +43,11 @@ fn run_cmd(command: &String){
         // "ls" => {
         //     list_items();
         // },
-        "exit"=> println!("Close the shell with exit()"),
+        "exit" => println!("Close the shell with `exit()`\n"),
+        "exit()" => {
+                println!("Ciao!");
+                std::process::exit(1);
+            },
         "cd" => {
             if args.len() > 1 {
                 change_directory(args[1]);
