@@ -30,8 +30,14 @@ fn make_queue(command: &String) -> Vec<&str>{
     commands.collect::<Vec<&str>>()
 }
 
-fn run_cmd(command: &String){
+fn get_prompt() -> String {
+    let mut cmd_to_exec = Command::new("pwd").output().unwrap();
+    let mut output = String::from("phonnz@intruso:");
+    output.push_str(&String::from_utf8_lossy(&cmd_to_exec.stdout).to_string());
+    output
+}
 
+fn run_cmd(command: &String){
     let mut args = parse_cmd(command);
     match args[0] {
         // "ls" => {
@@ -41,20 +47,19 @@ fn run_cmd(command: &String){
             if args.len() > 1 {
                 change_directory(args[1]);
             }else{
-                println!("Error: command cd requires a path");
+                change_directory("/home/phonnz");
             }
         },
         _ => {
-            let mut list_dir = Command::new(args[0]);
+            let mut cmd_to_exec = Command::new(args[0]);
             if args.len() > 1 {
                 args.reverse();
                 args.pop();
                 for a in args{
-                    list_dir.arg(a);
+                    cmd_to_exec.arg(a);
                 }
             }
-            list_dir.status().expect("failed to execute process");
-            // println!("");
+            cmd_to_exec.status().expect("failed to execute process");
             // list_dir.current_dir("/");
             // list_dir.status().expect("failed to execute process");
             
@@ -62,17 +67,26 @@ fn run_cmd(command: &String){
         // ,
         // _ => println!("command not found: {}", args[0])
     }
+    print!("{}", get_prompt());
+    
 }
 
 
 
 fn main() {
+    print!("{}", get_prompt());
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
         let line = line.unwrap();
-        let queue = make_queue(&line);
-        for cmd in queue.iter(){
-            run_cmd(&cmd.to_string());
+        if  line.is_empty() {
+            println!("Uh?");
+            print!("{}", get_prompt());
+        }else{
+            let queue = make_queue(&line);
+                for cmd in queue.iter(){
+                    run_cmd(&cmd.to_string());
+                }
+
         }
         
     }
